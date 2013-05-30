@@ -33,16 +33,16 @@ private:
 
     bool Visited(int x, int y) {
         unsigned int normal_pos = y * m_w + x;
-        unsigned int byte_pos = normal_pos / sizeof(BYTE);
+        unsigned int byte_pos = normal_pos / 8;
 
-        return lookup[byte_pos] & (0x01u << (normal_pos - byte_pos*sizeof(BYTE)));
+        return lookup[byte_pos] & (1 << (normal_pos - byte_pos*8));
     }
 
     void Visit(int x, int y) {
         unsigned int normal_pos = y * m_w + x;
-        unsigned int byte_pos = normal_pos / sizeof(BYTE);
+        unsigned int byte_pos = normal_pos / 8;
 
-        lookup[byte_pos] |= (0x01u << (normal_pos - byte_pos*sizeof(BYTE)));
+        lookup[byte_pos] |= (1 << (normal_pos - byte_pos*8));
     }
 };
 
@@ -53,7 +53,7 @@ TMaskCleaner::TMaskCleaner(PClip child, int length, int thresh, IScriptEnvironme
     if (length <= 0 || thresh <= 0) {
         env->ThrowError("Invalid arguments!");
     }
-    lookup = new BYTE[child->GetVideoInfo().height * child->GetVideoInfo().width / sizeof(BYTE)];
+    lookup = new BYTE[child->GetVideoInfo().height * child->GetVideoInfo().width / 8];
     m_w = child->GetVideoInfo().width;
 }
 
@@ -62,7 +62,7 @@ PVideoFrame TMaskCleaner::GetFrame(int n, IScriptEnvironment* env) {
     PVideoFrame dst = env->NewVideoFrame(child->GetVideoInfo());
 
     memset(dst->GetWritePtr(PLANAR_Y), 0, dst->GetPitch(PLANAR_Y) * dst->GetHeight(PLANAR_Y));
-    memset(lookup, 0, child->GetVideoInfo().height * child->GetVideoInfo().width / sizeof(BYTE));
+    memset(lookup, 0, child->GetVideoInfo().height * child->GetVideoInfo().width / 8);
 
     ClearMask(dst->GetWritePtr(PLANAR_Y), src->GetReadPtr(PLANAR_Y), dst->GetRowSize(PLANAR_Y), dst->GetHeight(PLANAR_Y),src->GetPitch(PLANAR_Y), dst->GetPitch(PLANAR_Y));
     return dst;
