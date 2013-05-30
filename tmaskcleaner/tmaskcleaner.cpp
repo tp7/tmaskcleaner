@@ -25,7 +25,7 @@ private:
     int m_w;
 
     void ClearMask(BYTE *dst, const BYTE *src, int width, int height, int src_pitch, int dst_pitch);
-    vector<Coordinates> ProcessPixel(const BYTE *src, int x, int y, int pitch, int w, int h);
+    void ProcessPixel(const BYTE *src, int x, int y, int pitch, int w, int h, vector<Coordinates> &coordinates, vector<Coordinates> &white_pixels);
 
     bool IsWhite(BYTE value) {
         return value >= m_thresh;
@@ -68,9 +68,10 @@ PVideoFrame TMaskCleaner::GetFrame(int n, IScriptEnvironment* env) {
     return dst;
 }
 
-vector<Coordinates> TMaskCleaner::ProcessPixel(const BYTE *src, int x, int y, int pitch, int w, int h) {
-    vector<Coordinates> coordinates;
-    vector<Coordinates> white_pixels;
+void TMaskCleaner::ProcessPixel(const BYTE *src, int x, int y, int pitch, int w, int h, vector<Coordinates> &coordinates, vector<Coordinates> &white_pixels) {
+    coordinates.clear();
+    white_pixels.clear();
+
     coordinates.emplace_back(x, y);
 
     while (!coordinates.empty()) {
@@ -94,18 +95,20 @@ vector<Coordinates> TMaskCleaner::ProcessPixel(const BYTE *src, int x, int y, in
             }
         }
     }
-    return move(white_pixels);
 }
 
 void TMaskCleaner::ClearMask(BYTE *dst, const BYTE *src, int w, int h, int src_pitch, int dst_pitch) {
+    vector<Coordinates> coordinates;
+    vector<Coordinates> white_pixels;
+
     for(int y = 0; y < h; ++y) {
         for(int x = 0; x < w; ++x) {
             if (Visited(x,y) || !IsWhite(src[src_pitch * y + x])) {
                 continue;
             }
-            auto pixels = ProcessPixel(src, x, y, src_pitch, w,h);
-            if (pixels.size() >= m_length) {
-                for(auto &pixel: pixels) {
+            ProcessPixel(src, x, y, src_pitch, w,h, coordinates, white_pixels);
+            if (white_pixels.size() >= m_length) {
+                for(auto &pixel: white_pixels) {
                     dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first];
                 }
             }
