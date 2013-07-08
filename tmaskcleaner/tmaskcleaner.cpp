@@ -68,7 +68,7 @@ PVideoFrame TMaskCleaner::GetFrame(int n, IScriptEnvironment* env) {
     return dst;
 }
 
-void TMaskCleaner::ProcessPixel(const BYTE *src, int x, int y, int pitch, int w, int h, vector<Coordinates> &coordinates, vector<Coordinates> &white_pixels) {
+__forceinline void TMaskCleaner::ProcessPixel(const BYTE *src, int x, int y, int pitch, int w, int h, vector<Coordinates> &coordinates, vector<Coordinates> &white_pixels) {
     coordinates.clear();
     white_pixels.clear();
 
