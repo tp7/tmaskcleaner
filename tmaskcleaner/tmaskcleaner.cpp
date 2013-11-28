@@ -47,7 +47,7 @@ private:
 };
 
 TMaskCleaner::TMaskCleaner(PClip child, int length, int thresh, IScriptEnvironment* env) : GenericVideoFilter(child), m_length(length), m_thresh(thresh), lookup(nullptr) {
-    if (!child->GetVideoInfo().IsYV12()) {
+    if (!vi.IsPlanar()) {
         env->ThrowError("Only YV12 and YV24 is supported!");
     }
     if (length <= 0 || thresh <= 0) {
@@ -122,7 +122,11 @@ AVSValue __cdecl Create_TMaskCleaner(AVSValue args, void*, IScriptEnvironment* e
     return new TMaskCleaner(args[CLIP].AsClip(), args[LENGTH].AsInt(5), args[THRESH].AsInt(235), env);
 }
 
-extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env) {
+const AVS_Linkage *AVS_linkage = nullptr;
+
+extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors) {
+    AVS_linkage = vectors;
+
     env->AddFunction("TMaskCleaner", "c[length]i[thresh]i", Create_TMaskCleaner, 0);
     return "Why are you looking at this?";
 }
