@@ -49,7 +49,7 @@ private:
 
 TMaskCleaner::TMaskCleaner(PClip child, int length, int thresh, int fade, IScriptEnvironment* env) : GenericVideoFilter(child), m_length(length), m_thresh(thresh), m_fade(fade), lookup(nullptr) {
     if (!vi.IsPlanar()) {
-        env->ThrowError("Only YV12 and YV24 is supported!");
+        env->ThrowError("Only Y8, YV12 and YV24 are supported!");
     }
     if (length <= 0 || thresh <= 0) {
         env->ThrowError("Invalid arguments!");
@@ -109,22 +109,22 @@ void TMaskCleaner::ClearMask(BYTE *dst, const BYTE *src, int w, int h, int src_p
             }
             ProcessPixel(src, x, y, src_pitch, w,h, coordinates, white_pixels);
             if (white_pixels.size() >= m_length) {
-				if ((white_pixels.size() - m_length > m_fade) || (m_fade <= 0)) {
-					for(auto &pixel: white_pixels) {
-						dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first];
-					}
-				}
-				else {
-					for(auto &pixel: white_pixels) {
-						dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first] * (white_pixels.size() - m_length) / m_fade;
-					}
-				}
+                if ((white_pixels.size() - m_length > m_fade) || (m_fade <= 0)) {
+                    for(auto &pixel: white_pixels) {
+                        dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first];
+                    }
+                }
+                else {
+                    for(auto &pixel: white_pixels) {
+                        dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first] * (white_pixels.size() - m_length) / m_fade;
+                    }
+                }
             }
         }
     }
 }
 
-AVSValue __cdecl Create_TMaskCleaner(AVSValue args, void*, IScriptEnvironment* env) 
+AVSValue __cdecl Create_TMaskCleaner(AVSValue args, void*, IScriptEnvironment* env)
 {
     enum { CLIP, LENGTH, THRESH, FADE};
     return new TMaskCleaner(args[CLIP].AsClip(), args[LENGTH].AsInt(5), args[THRESH].AsInt(235), args[FADE].AsInt(0), env);
