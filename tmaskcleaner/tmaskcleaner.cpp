@@ -10,7 +10,7 @@ typedef pair<int, int> Coordinates;
 
 class TMaskCleaner : public GenericVideoFilter {
 public:
-    TMaskCleaner(PClip child, int length, int thresh, IScriptEnvironment*);
+    TMaskCleaner(PClip child, int length, int thresh, int fade, IScriptEnvironment*);
     PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env);
 
     ~TMaskCleaner() {
@@ -21,6 +21,7 @@ public:
 private:
     unsigned int m_length;
     unsigned int m_thresh;
+    unsigned int m_fade;
     BYTE *lookup;
     int m_w;
 
@@ -46,8 +47,8 @@ private:
     }
 };
 
-TMaskCleaner::TMaskCleaner(PClip child, int length, int thresh, IScriptEnvironment* env) : GenericVideoFilter(child), m_length(length), m_thresh(thresh), lookup(nullptr) {
-    if (!child->GetVideoInfo().IsYV12()) {
+TMaskCleaner::TMaskCleaner(PClip child, int length, int thresh, int fade, IScriptEnvironment* env) : GenericVideoFilter(child), m_length(length), m_thresh(thresh), m_fade(fade), lookup(nullptr) {
+    if (!vi.IsPlanar()) {
         env->ThrowError("Only YV12 and YV24 is supported!");
     }
     if (length <= 0 || thresh <= 0) {
@@ -108,9 +109,16 @@ void TMaskCleaner::ClearMask(BYTE *dst, const BYTE *src, int w, int h, int src_p
             }
             ProcessPixel(src, x, y, src_pitch, w,h, coordinates, white_pixels);
             if (white_pixels.size() >= m_length) {
-                for(auto &pixel: white_pixels) {
-                    dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first];
-                }
+				if ((white_pixels.size() - m_length > m_fade) || (m_fade <= 0)) {
+					for(auto &pixel: white_pixels) {
+						dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first];
+					}
+				}
+				else {
+					for(auto &pixel: white_pixels) {
+						dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first] * (white_pixels.size() - m_length) / m_fade;
+					}
+				}
             }
         }
     }
@@ -118,11 +126,15 @@ void TMaskCleaner::ClearMask(BYTE *dst, const BYTE *src, int w, int h, int src_p
 
 AVSValue __cdecl Create_TMaskCleaner(AVSValue args, void*, IScriptEnvironment* env) 
 {
-    enum { CLIP, LENGTH, THRESH};
-    return new TMaskCleaner(args[CLIP].AsClip(), args[LENGTH].AsInt(5), args[THRESH].AsInt(235), env);
+    enum { CLIP, LENGTH, THRESH, FADE};
+    return new TMaskCleaner(args[CLIP].AsClip(), args[LENGTH].AsInt(5), args[THRESH].AsInt(235), args[FADE].AsInt(0), env);
 }
 
-extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env) {
-    env->AddFunction("TMaskCleaner", "c[length]i[thresh]i", Create_TMaskCleaner, 0);
+const AVS_Linkage *AVS_linkage = nullptr;
+
+extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors) {
+    AVS_linkage = vectors;
+
+    env->AddFunction("TMaskCleaner", "c[length]i[thresh]i[fade]i", Create_TMaskCleaner, 0);
     return "Why are you looking at this?";
 }
