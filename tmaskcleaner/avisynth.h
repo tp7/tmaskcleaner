@@ -99,29 +99,29 @@ typedef long            PixOffset;
 typedef float SFLOAT;
 
 enum {
-    SAMPLE_INT8 = 1 << 0,
-    SAMPLE_INT16 = 1 << 1,
-    SAMPLE_INT24 = 1 << 2,    // Int24 is a very stupid thing to code, but it's supported by some hardware.
-    SAMPLE_INT32 = 1 << 3,
-    SAMPLE_FLOAT = 1 << 4
+    SAMPLE_INT8 = 1<<0,
+    SAMPLE_INT16 = 1<<1,
+    SAMPLE_INT24 = 1<<2,    // Int24 is a very stupid thing to code, but it's supported by some hardware.
+    SAMPLE_INT32 = 1<<3,
+    SAMPLE_FLOAT = 1<<4
 };
 
 enum {
-    PLANAR_Y = 1 << 0,
-    PLANAR_U = 1 << 1,
-    PLANAR_V = 1 << 2,
-    PLANAR_ALIGNED = 1 << 3,
-    PLANAR_Y_ALIGNED = PLANAR_Y | PLANAR_ALIGNED,
-    PLANAR_U_ALIGNED = PLANAR_U | PLANAR_ALIGNED,
-    PLANAR_V_ALIGNED = PLANAR_V | PLANAR_ALIGNED,
-    PLANAR_A = 1 << 4,
-    PLANAR_R = 1 << 5,
-    PLANAR_G = 1 << 6,
-    PLANAR_B = 1 << 7,
-    PLANAR_A_ALIGNED = PLANAR_A | PLANAR_ALIGNED,
-    PLANAR_R_ALIGNED = PLANAR_R | PLANAR_ALIGNED,
-    PLANAR_G_ALIGNED = PLANAR_G | PLANAR_ALIGNED,
-    PLANAR_B_ALIGNED = PLANAR_B | PLANAR_ALIGNED,
+    PLANAR_Y = 1<<0,
+    PLANAR_U = 1<<1,
+    PLANAR_V = 1<<2,
+    PLANAR_ALIGNED = 1<<3,
+    PLANAR_Y_ALIGNED = PLANAR_Y|PLANAR_ALIGNED,
+    PLANAR_U_ALIGNED = PLANAR_U|PLANAR_ALIGNED,
+    PLANAR_V_ALIGNED = PLANAR_V|PLANAR_ALIGNED,
+    PLANAR_A = 1<<4,
+    PLANAR_R = 1<<5,
+    PLANAR_G = 1<<6,
+    PLANAR_B = 1<<7,
+    PLANAR_A_ALIGNED = PLANAR_A|PLANAR_ALIGNED,
+    PLANAR_R_ALIGNED = PLANAR_R|PLANAR_ALIGNED,
+    PLANAR_G_ALIGNED = PLANAR_G|PLANAR_ALIGNED,
+    PLANAR_B_ALIGNED = PLANAR_B|PLANAR_ALIGNED,
 };
 
 class AvisynthError /* exception */ {
@@ -286,11 +286,11 @@ struct AVS_Linkage {
     bool            (AVSValue::*AsBool1)() const;
     int             (AVSValue::*AsInt1)() const;
     const char*     (AVSValue::*AsString1)() const;
-    float           (AVSValue::*AsFloat1)() const;
+    double          (AVSValue::*AsFloat1)() const;
     bool            (AVSValue::*AsBool2)(bool def) const;
     int             (AVSValue::*AsInt2)(int def) const;
     double          (AVSValue::*AsDblDef)(double def) const;
-    float           (AVSValue::*AsFloat2)(float def) const;
+    double          (AVSValue::*AsFloat2)(float def) const;
     const char*     (AVSValue::*AsString2)(const char* def) const;
     int             (AVSValue::*ArraySize)() const;
     // end class AVSValue
@@ -361,10 +361,10 @@ struct VideoInfo {
     Planar filter mask 1111.1111.1111.1111.1111.1111.1100.1111
     */
     enum {
-        CS_BGR = 1 << 28,
-        CS_YUV = 1 << 29,
-        CS_INTERLEAVED = 1 << 30,
-        CS_PLANAR = 1 << 31,
+        CS_BGR = 1<<28,
+        CS_YUV = 1<<29,
+        CS_INTERLEAVED = 1<<30,
+        CS_PLANAR = 1<<31,
 
         CS_Shift_Sub_Width = 0,
         CS_Shift_Sub_Height = 8,
@@ -393,12 +393,12 @@ struct VideoInfo {
 
         // Specific colorformats
         CS_UNKNOWN = 0,
-        CS_BGR24 = 1 << 0 | CS_BGR | CS_INTERLEAVED,
-        CS_BGR32 = 1 << 1 | CS_BGR | CS_INTERLEAVED,
-        CS_YUY2 = 1 << 2 | CS_YUV | CS_INTERLEAVED,
+        CS_BGR24 = 1<<0 | CS_BGR | CS_INTERLEAVED,
+        CS_BGR32 = 1<<1 | CS_BGR | CS_INTERLEAVED,
+        CS_YUY2 = 1<<2 | CS_YUV | CS_INTERLEAVED,
         //  CS_YV12  = 1<<3  Reserved
         //  CS_I420  = 1<<4  Reserved
-        CS_RAW32 = 1 << 5 | CS_INTERLEAVED,
+        CS_RAW32 = 1<<5 | CS_INTERLEAVED,
 
         //  YV12 must be 0xA000008 2.5 Baked API will see all new planar as YV12
         //  I420 must be 0xA000010
@@ -438,9 +438,9 @@ struct VideoInfo {
     int image_type;
 
     enum {
-        IT_BFF = 1 << 0,
-        IT_TFF = 1 << 1,
-        IT_FIELDBASED = 1 << 2
+        IT_BFF = 1<<0,
+        IT_TFF = 1<<1,
+        IT_FIELDBASED = 1<<2
     };
 
     // Chroma placement bits 20 -> 23  ::FIXME:: Really want a Class to support this
@@ -783,13 +783,13 @@ public:
         int AsInt() const AVS_BakedCode(return AVS_LinkCall(AsInt1)())
         //  int AsLong() const;
         const char* AsString() const AVS_BakedCode(return AVS_LinkCall(AsString1)())
-        float AsFloat() const AVS_BakedCode(return AVS_LinkCall(AsFloat1)())
+        double AsFloat() const AVS_BakedCode(return AVS_LinkCall(AsFloat1)())
 
         bool AsBool(bool def) const AVS_BakedCode(return AVS_LinkCall(AsBool2)(def))
         int AsInt(int def) const AVS_BakedCode(return AVS_LinkCall(AsInt2)(def))
         double AsDblDef(double def) const AVS_BakedCode(return AVS_LinkCall(AsDblDef)(def)) // Value is still a float
         //float AsFloat(double def) const; // def demoted to a float
-        float AsFloat(float def) const AVS_BakedCode(return AVS_LinkCall(AsFloat2)(def))
+        double AsFloat(float def) const AVS_BakedCode(return AVS_LinkCall(AsFloat2)(def))
         const char* AsString(const char* def) const AVS_BakedCode(return AVS_LinkCall(AsString2)(def))
 
         int ArraySize() const AVS_BakedCode(return AVS_LinkCall(ArraySize)())
@@ -830,11 +830,11 @@ public:
     bool            AsBool1() const;
     int             AsInt1() const;
     const char*     AsString1() const;
-    float           AsFloat1() const;
+    double          AsFloat1() const;
 
     bool            AsBool2(bool def) const;
     int             AsInt2(int def) const;
-    float           AsFloat2(float def) const;
+    double          AsFloat2(float def) const;
     const char*     AsString2(const char* def) const;
 #endif
 }; // end class AVSValue
