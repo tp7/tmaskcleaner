@@ -54,6 +54,9 @@ TMaskCleaner::TMaskCleaner(PClip child, int length, int thresh, int fade, IScrip
     if (length <= 0 || thresh <= 0) {
         env->ThrowError("TMaskCleaner: length and thresh must be greater than zero.");
     }
+    if (fade < 0) {
+        env->ThrowError("TMaskCleaner: fade cannot be negative.");
+    }
     lookup_ = new uint8_t[child->GetVideoInfo().height * child->GetVideoInfo().width / 8];
     width_ = child->GetVideoInfo().width;
 }
@@ -108,15 +111,15 @@ void TMaskCleaner::clear_mask(uint8_t *dst, const uint8_t *src, int w, int h, in
                 continue;
             }
             process_pixel(src, x, y, src_pitch, w,h, coordinates, white_pixels);
-            if (white_pixels.size() >= length_) {
-                if ((white_pixels.size() - length_ > fade_) || (fade_ <= 0)) {
+            size_t pixels_count = white_pixels.size();
+            if (pixels_count >= length_) {
+                if ((pixels_count - length_ > fade_) || (fade_ == 0)) {
                     for(auto &pixel: white_pixels) {
                         dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first];
                     }
-                }
-                else {
+                } else {
                     for(auto &pixel: white_pixels) {
-                        dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first] * (white_pixels.size() - length_) / fade_;
+                        dst[dst_pitch * pixel.second + pixel.first] = src[src_pitch * pixel.second + pixel.first] * (pixels_count - length_) / fade_;
                     }
                 }
             }
